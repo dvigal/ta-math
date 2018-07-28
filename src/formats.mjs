@@ -1,25 +1,32 @@
-/* formats */
-
-export let exchangeFormat = (x) => {
+/**
+ * Stock exchanges responce format
+ * @param {number[][]} data
+ */
+export let exchangeFormat = (data) => {
   return {
-    length: x.length,
-    time: (i) => x[i][0],
-    open: (i) => x[i][1],
-    high: (i) => x[i][2],
-    low: (i) => x[i][3],
-    close: (i) => x[i][4],
-    volume: (i) => x[i][5]
+    length: data.length,
+    time: (i) => data[i][0],
+    open: (i) => data[i][1],
+    high: (i) => data[i][2],
+    low: (i) => data[i][3],
+    close: (i) => data[i][4],
+    volume: (i) => data[i][5]
   }
 };
 
-export let simpleFormat = (x) => {
+
+/**
+ * Format that convenient for charts and analysis 
+ * @param {number[][]} data
+ */
+export let simpleFormat = (data) => {
   return {
-    length: x[0].length,
-    time: (i) => x[0][i],
-    open: (i) => x[1][i],
-    high: (i) => x[2][i],
-    low: (i) => x[3][i],
-    close: (i) => x[4][i],
-    volume: (i) => x[5][i]
+    length: data[0].length,
+    time: (i) => data[0][i],
+    open: (i) => data[1][i],
+    high: (i) => data[2][i],
+    low: (i) => data[3][i],
+    close: (i) => data[4][i],
+    volume: (i) => data[5][i]
   }
 }

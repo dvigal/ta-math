@@ -1,17 +1,34 @@
 import { sd, pointwise, rolling, trueRange} from './core';
 import { ema, sma } from './overlays';
 
-/* indicators */
-
+/**
+ * Sliding window standart deviation
+ * @param $close close price
+ * @param window size of window
+ */
 export function stddev($close, window) {
   return rolling(x => sd(x), window, $close);
 }
 
+
+/**
+ * Sliding window weighted standart deviation
+ * @param $close close price
+ * @param window window size
+ */
 export function expdev($close, window, weight = null) {
   let sqrDiff = pointwise((a, b) => (a - b) * (a - b), $close, ema($close, window));
   return pointwise(x => Math.sqrt(x), ema(sqrDiff, window, weight));
 }
 
+
+/**
+ * Moving average convergence/divergence
+ * @param $close close price
+ * @param wshort short window size
+ * @param wlong long window size
+ * @param wsig signal window size
+ */
 export function macd($close, wshort, wlong, wsig) {
   const line = pointwise((a, b) => a - b, ema($close, wshort), ema($close, wlong));
   const signal = ema(line, wsig);

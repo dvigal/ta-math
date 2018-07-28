@@ -5,8 +5,11 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 var tape = _interopDefault(require('tape'));
 var tapSpec = _interopDefault(require('tap-spec'));
 
-/* basic functions */
-
+/**
+ * Mean of an array
+ * @param {nubmer[]} array 
+ * @return {number}
+ */
 function mean(array) {
   let sum = 0;
   for (let i = 0; i < array.length; i++) {
@@ -15,30 +18,63 @@ function mean(array) {
   return sum / array.length;
 }
 
+
+/**
+ * Standart deviation of an array
+ * @param {number[]} array 
+ * @return {number}
+ */
 function sd(array) {
   return rmsd(array, new Array(array.length).fill(mean(array)));
 }
 
+
+/**
+ * Root-mean-square deviation, error measure of the differences between two functions
+ * @param {number[]} f
+ * @param {number[]} g
+ * @return {number}
+ */
 function rmsd(f, g) {
   const sqrDiff = pointwise((a, b) => (a - b) * (a - b), f, g);
   return (f.length != g.length) ? Infinity : Math.sqrt(mean(sqrDiff));
 }
 
+
+/**
+ * Normalized root-mean-square deviation, error measure of the differences between two functions
+ * @param {number[]} f 
+ * @param {number[]} g
+ * @return {number}
+ */
 function nrmsd(f, g) {
   return rmsd(f, g) / (Math.max(...f) - Math.min(...f));
 }
 
-function pointwise(operation, ...args) {
+
+/**
+ * Provides elementwise operation of some amount function, i.e. map() generalization.
+ * @param {function} operation
+ * @param {...number[]} functions 
+ * @return {number[]}
+ */
+function pointwise(operation, ...functions) {
   let result = [];
-  for (let i = 0; i < args[0].length; i++) {
-    let iargs = (i) => args.map(array => array[i]);
-    result[i] = operation(...iargs(i));
+  for (let i = 0; i < functions[0].length; i++) {
+    let points = (i) => functions.map(array => array[i]);
+    result[i] = operation(...points(i));
   }
   return result;
 }
 
-/* rolling or price specific functions */
 
+/**
+ * Provides rolling window calculations
+ * @param {function} operation 
+ * @param {number} window 
+ * @param {number[]} array
+ * @return {[number[]]}
+ */
 function rolling(operation, window, array) {
   let result = [];
   for (let i = 0; i < array.length; i++) {
@@ -48,6 +84,14 @@ function rolling(operation, window, array) {
   return result;
 }
 
+
+/**
+ * Calculates True Range in technical analysis
+ * @param {number[]} $high
+ * @param {number[]} $low
+ * @param {number[]} $close
+ * @return {number[]}
+ */
 function trueRange($high, $low, $close) {
   let tr = [$high[0] - $low[0]];
   for (let i = 1; i < $low.length; i++) {
@@ -56,29 +100,36 @@ function trueRange($high, $low, $close) {
   return tr;
 }
 
-/* formats */
-
-let exchangeFormat = (x) => {
+/**
+ * Stock exchanges responce format
+ * @param {number[][]} data
+ */
+let exchangeFormat = (data) => {
   return {
-    length: x.length,
-    time: (i) => x[i][0],
-    open: (i) => x[i][1],
-    high: (i) => x[i][2],
-    low: (i) => x[i][3],
-    close: (i) => x[i][4],
-    volume: (i) => x[i][5]
+    length: data.length,
+    time: (i) => data[i][0],
+    open: (i) => data[i][1],
+    high: (i) => data[i][2],
+    low: (i) => data[i][3],
+    close: (i) => data[i][4],
+    volume: (i) => data[i][5]
   }
 };
 
-let simpleFormat = (x) => {
+
+/**
+ * Format that convenient for charts and analysis 
+ * @param {number[][]} data
+ */
+let simpleFormat = (data) => {
   return {
-    length: x[0].length,
-    time: (i) => x[0][i],
-    open: (i) => x[1][i],
-    high: (i) => x[2][i],
-    low: (i) => x[3][i],
-    close: (i) => x[4][i],
-    volume: (i) => x[5][i]
+    length: data[0].length,
+    time: (i) => data[0][i],
+    open: (i) => data[1][i],
+    high: (i) => data[2][i],
+    low: (i) => data[3][i],
+    close: (i) => data[4][i],
+    volume: (i) => data[5][i]
   }
 };
 
@@ -166,17 +217,34 @@ function zigzag($time, $high, $low, percent) {
   }  return { time : time, price : zigzag};
 }
 
-/* indicators */
-
+/**
+ * Sliding window standart deviation
+ * @param $close close price
+ * @param window size of window
+ */
 function stddev($close, window) {
   return rolling(x => sd(x), window, $close);
 }
 
+
+/**
+ * Sliding window weighted standart deviation
+ * @param $close close price
+ * @param window window size
+ */
 function expdev($close, window, weight = null) {
   let sqrDiff = pointwise((a, b) => (a - b) * (a - b), $close, ema($close, window));
   return pointwise(x => Math.sqrt(x), ema(sqrDiff, window, weight));
 }
 
+
+/**
+ * Moving average convergence/divergence
+ * @param $close close price
+ * @param wshort short window size
+ * @param wlong long window size
+ * @param wsig signal window size
+ */
 function macd($close, wshort, wlong, wsig) {
   const line = pointwise((a, b) => a - b, ema($close, wshort), ema($close, wlong));
   const signal = ema(line, wsig);
@@ -549,3 +617,13 @@ tape('VI', (t) => {
   t.ok(delta1 + delta2 < 2e-2, `NRMSD test (${delta1.toFixed(5)}, ${delta2.toFixed(5)})`);
   t.end();
 });
+
+function* test(a) {
+  for(let i = 0; i < a.length; i++) {
+    yield a[i];
+  }
+}
+
+let a = [2,3,4,5];
+let gen = test(a);
+console.log(gen.next().value);
